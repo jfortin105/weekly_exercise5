@@ -166,13 +166,31 @@ knitr::include_graphics("train_animation.gif")
 
 I have started the code for you below. The `complete()` function creates a row for all unique `date`/`variety` combinations. If a variety is not harvested on one of the harvest dates in the dataset, it is filled with a value of 0.
 
-```{r}
+```{r eval=FALSE}
 garden_harvest %>% 
   filter(vegetable == "tomatoes") %>% 
   group_by(date, variety) %>% 
   summarize(daily_harvest_lb = sum(weight)*0.00220462) %>% 
   ungroup() %>% 
-  complete(variety, date, fill = list(daily_harvest_lb = 0))
+  complete(variety, date, fill = list(daily_harvest_lb = 0)) %>%
+  group_by(variety) %>% 
+  mutate(cum_harvest_lbs = cumsum(daily_harvest_lb)) %>% 
+  ungroup() %>% 
+  mutate(variety_reorder = fct_reorder(variety, daily_harvest_lb, sum, .desc = FALSE))  %>% 
+  ggplot(aes(x = date, y = cum_harvest_lbs, fill = variety_reorder)) +
+  scale_fill_brewer(palette = "Paired") +
+  geom_area() +
+  labs(title = "Cumulative Harvest (lbs) of Tomato Varieties Over Time",
+       subtitle = "Date: {frame_along}",
+       x = "",
+       y = "") +
+  transition_reveal(date)
+
+anim_save("tomato_cumsum.gif")
+```
+
+```{r}
+knitr::include_graphics("tomato_cumsum.gif")
 ```
 
 

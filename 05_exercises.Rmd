@@ -33,6 +33,7 @@ library(gganimate)     # for adding animation layers to ggplots
 library(transformr)    # for "tweening" (gganimate)
 library(gifski)        # need the library for creating gifs but don't need to load each time
 library(shiny)         # for creating interactive apps
+library(directlabels)   # for geom_dl
 theme_set(theme_minimal())
 ```
 
@@ -83,11 +84,77 @@ Once your repository is created, you should always open your **project** rather 
 
   1. Choose 2 graphs you have created for ANY assignment in this class and add interactivity using the `ggplotly()` function.
   
+```{r}
+home_owner <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2021/2021-02-09/home_owner.csv')
+
+home_ownership_race <- home_owner %>% 
+  mutate(home_owner = home_owner_pct * 100) %>% 
+  ggplot(aes(x = year, y = home_owner, color = race)) +
+  geom_line(aes(linetype = race, size = race)) +
+  scale_linetype_manual(values = c("solid", "solid", "solid")) +
+  scale_color_manual(values = c("peru", "steelblue4", "coral4")) + 
+  scale_size_manual(values = c(1.25, 1.25, 1.25)) +
+  geom_dl(aes(label = race), method = list(dl.trans(x = x + 0.2), "last.points", cex = 1.25)) +
+  theme(plot.background = element_rect("snow2"), 
+        panel.background = element_rect("snow2"),
+        panel.border = element_rect(fill = NA, color = "gray80"),
+        panel.grid.major = element_line("gray80"),
+        panel.grid.minor = element_blank(),
+        axis.line = element_line(size = 0.5, 
+                                 linetype = "solid",
+                                 colour = "gray80"),
+        legend.position = "none") +
+  xlim(1976, 2021)+
+  labs(title = "US Homeownership by Race/Ethnicity",
+       subtitle = "Percentages from 1976 - 2016",
+       caption = "Josh Fortin | Data: US Census, Urban Institute",
+       color = "",
+       x = "",
+       y = "")
+
+ggplotly(home_ownership_race)
+```
+  
+  
+```{r}
+lettuce <- garden_harvest %>% 
+  filter(vegetable == "lettuce") %>% 
+  count(variety, name = "var_count") %>% 
+  arrange(desc(var_count)) %>% 
+  ggplot(aes(x = var_count, y = variety)) +
+  geom_col() +
+  labs(title = "Lettuce Harvests by Species", 
+       x = "Number of Times Each Species was Harvested", 
+       y = "Lettuce Species")
+
+ggplotly(lettuce)
+```
+  
+  
   2. Use animation to tell an interesting story with the `small_trains` dataset that contains data from the SNCF (National Society of French Railways). These are Tidy Tuesday data! Read more about it [here](https://github.com/rfordatascience/tidytuesday/tree/master/data/2019/2019-02-26).
 
-```{r}
+```{r eval=FALSE}
+small_trains %>% 
+  filter(departure_station == "PARIS EST") %>% 
+  group_by(year, arrival_station) %>% 
+  summarize(avg_delay = mean(avg_delay_all_departing)) %>% 
+  ggplot(aes(x = year, y = avg_delay, color = arrival_station)) +
+  geom_line(size = 1.3) +
+  labs(title = "Average Delay (Min) of All Departing Trains from PARIS EST Station",
+       subtitle = "Year: {frame_along}",
+       x = "",
+       y = "",
+       color = "Arrival Station") +
+  transition_reveal(year)
 
+anim_save("train_animation.gif")
 ```
+
+
+```{r}
+knitr::include_graphics("train_animation.gif")
+```
+
 
 ## Garden data
 

@@ -333,6 +333,40 @@ census_pop_est_2018 <- read_csv("https://www.dropbox.com/s/6txwv3b4ng7pepe/us_ce
 states_map <- map_data("state")
 ```
 
+```{r eval=FALSE}
+covidplot2 <- covid19 %>% 
+  mutate(day_week = wday(date, label = TRUE)) %>% 
+  filter(day_week == "Fri") %>% 
+  mutate(state_lower = str_to_lower(state)) %>% 
+  select(-state) %>%
+  group_by(state_lower) %>% 
+  left_join(census_pop_est_2018,
+            by = c("state_lower" = "state")) %>% 
+  mutate(covid_per_10000 = (cases/est_pop_2018)*10000) %>%
+  ggplot() +
+  geom_map(map = states_map,
+           aes(map_id = state_lower,
+               fill = covid_per_10000,
+               group = date)) +
+  expand_limits(x = states_map$long, y = states_map$lat) +
+  theme_map() +
+  theme(legend.position = "top") +
+  scale_fill_continuous(type = "viridis") +
+  labs(title = "Cumulative COVID19 Cases per 10,000 People",
+       subtitle = "Date: {frame_time}",
+       fill = "") +
+  transition_time(date)
+
+animate(plot = covidplot2, nframes = 200, end_pause = 10)
+
+anim_save("covid_plo2.gif")
+```
+
+```{r}
+knitr::include_graphics("covid_plo2.gif")
+```
+
+
 ## Your first `shiny` app (for next week!)
 
 NOT DUE THIS WEEK! If any of you want to work ahead, this will be on next week's exercises.

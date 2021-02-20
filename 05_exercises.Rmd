@@ -285,6 +285,36 @@ knitr::include_graphics("ironman.gif")
   * Use the `animate()` function to have 200 frames in your animation and make it 30 seconds long. 
   * Comment on what you observe.
   
+```{r  eval=FALSE}
+covid_plot1 <- covid19 %>% 
+  filter(cases > 20) %>% 
+  group_by(state) %>% 
+  mutate(cases_lag_7day = lag(cases, 7, order_by = date)) %>% 
+  replace_na(list(cases_lag_7day = 0)) %>% 
+  mutate(new_7day = (cases - cases_lag_7day)) %>% 
+  ggplot(aes(x = cases, y = new_7day, group = state, color = state)) +
+  geom_path() +
+  geom_point() +
+  geom_text(aes(label = state)) +
+  scale_y_log10(labels = scales::comma) +
+  scale_x_log10(labels = scales::comma) +
+  transition_reveal(along = date) +
+  theme(legend.position = "none") +
+  labs(title = "COVID19 Trajectory: Confirmed Cases",
+       subtitle = "Date: {frame_along}",
+       x = "Cumulative Cases",
+       y = "New Cases in Past Week") 
+
+animate(plot = covid_plot1, nframes = 200, duration = 30)
+
+anim_save("covid_plo1.gif")
+```
+  
+```{r}
+knitr::include_graphics("covid_plo1.gif")
+```
+  
+  
   7. In this exercise you will animate a map of the US, showing how cumulative COVID-19 cases per 10,000 residents has changed over time. This is similar to exercises 11 & 12 from the previous exercises, with the added animation! So, in the end, you should have something like the static map you made there, but animated over all the days. The code below gives the population estimates for each state and loads the `states_map` data. Here is a list of details you should include in the plot:
   
   * Put date in the subtitle.   
